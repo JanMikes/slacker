@@ -1,4 +1,4 @@
-name: Main workflow
+name: Tests
 
 on:
   - push
@@ -16,4 +16,4 @@ jobs:
 
       -   run: composer install --no-progress
 
-      -   run: composer phpstan
+      -   run: vendor/bin/phpunit

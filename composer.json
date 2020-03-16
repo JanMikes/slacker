@@ -2,12 +2,6 @@
     "name": "janmikes/slacker",
     "description": "Tool to automate activity check during home office",
     "type": "project",
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "require-dev": {
-        "phpunit/phpunit": "^9.0",
-        "phpstan/phpstan": "^0.12.15"
-    },
     "license": "MIT",
     "authors": [
         {
@@ -15,8 +9,14 @@
             "email": "j.mikes@me.com"
         }
     ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
-
+        "php": ">=7.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "phpstan/phpstan": "^0.12.15"
     },
     "scripts": {
         "phpstan": "vendor/bin/phpstan analyse"
