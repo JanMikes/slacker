@@ -22,9 +22,13 @@
         "phpstan": "vendor/bin/phpstan analyse"
     },
     "autoload": {
-        "JanMikes\\Slacker\\": "src"
+        "psr-4": {
+            "JanMikes\\Slacker\\": "src"
+        }
     },
     "autoload-dev": {
-        "JanMikes\\Slacker\\Tests\\": "tests"
+        "psr-4": {
+            "JanMikes\\Slacker\\Tests\\": "tests"
+        }
     }
 }
