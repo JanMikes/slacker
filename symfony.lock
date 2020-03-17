@@ -2,6 +2,9 @@
     "jamesiarmes/php-ntlm": {
         "version": "1.0.0"
     },
+    "nette/utils": {
+        "version": "v3.1.1"
+    },
     "php": {
         "version": "7.3"
     },

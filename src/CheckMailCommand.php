@@ -3,6 +3,7 @@
 namespace JanMikes\Slacker;
 
 use JanMikes\Slacker\ExchangeWebService\MailClient;
+use Nette\Utils\Strings;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,12 +36,12 @@ final class CheckMailCommand extends Command
 		$bodies = $this->mailClient->getBodies($messages);
 
 		foreach ($bodies as $body) {
+			$match = Strings::match($body, '/<a tabindex=\"1\" href=\"(?<url>\S+)\"/');
 
+			$output->writeln($match['url']);
 		}
 
-		foreach ($messages as $messageId) {
-			$output->writeln($messageId);
-		}
+		// @TODO after clicking update all messages, mark as read
 
 		return 0;
 	}
