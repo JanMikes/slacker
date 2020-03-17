@@ -31,7 +31,12 @@ final class CheckMailCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$messages = $this->mailClient->getMessagesIds();
+		$messages = $this->mailClient->findMessagesIds();
+		$bodies = $this->mailClient->getBodies($messages);
+
+		foreach ($bodies as $body) {
+
+		}
 
 		foreach ($messages as $messageId) {
 			$output->writeln($messageId);

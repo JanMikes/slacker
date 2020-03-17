@@ -3,6 +3,7 @@
 namespace JanMikes\Slacker\ExchangeWebService;
 
 use jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseFolderIdsType;
+use jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseItemIdsType;
 use jamesiarmes\PhpEws\Autodiscover;
 use jamesiarmes\PhpEws\Client;
 use jamesiarmes\PhpEws\Enumeration\DefaultShapeNamesType;
@@ -10,6 +11,7 @@ use jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType;
 use jamesiarmes\PhpEws\Enumeration\ResponseClassType;
 use jamesiarmes\PhpEws\Enumeration\UnindexedFieldURIType;
 use jamesiarmes\PhpEws\Request\FindItemType;
+use jamesiarmes\PhpEws\Request\GetItemType;
 use jamesiarmes\PhpEws\Type\AndType;
 use jamesiarmes\PhpEws\Type\ConstantValueType;
 use jamesiarmes\PhpEws\Type\ContainsExpressionType;
@@ -17,6 +19,7 @@ use jamesiarmes\PhpEws\Type\DistinguishedFolderIdType;
 use jamesiarmes\PhpEws\Type\FieldURIOrConstantType;
 use jamesiarmes\PhpEws\Type\IsEqualToType;
 use jamesiarmes\PhpEws\Type\IsGreaterThanOrEqualToType;
+use jamesiarmes\PhpEws\Type\ItemIdType;
 use jamesiarmes\PhpEws\Type\ItemResponseShapeType;
 use jamesiarmes\PhpEws\Type\PathToUnindexedFieldType;
 use jamesiarmes\PhpEws\Type\RestrictionType;
@@ -60,9 +63,56 @@ final class MailClient
 
 
 	/**
+	 * @param string[] $messagesIds
+	 *
+	 * return string[]
+	 */
+	public function getBodies(array $messagesIds): array
+	{
+		$request = new GetItemType();
+		$request->ItemIds = new NonEmptyArrayOfBaseItemIdsType();
+		$request->ItemIds->ItemId = array_map(static function(string $messageId) {
+			$itemId = new ItemIdType();
+			$itemId->Id = $messageId;
+
+			return $itemId;
+		}, $messagesIds);
+
+		$request->ItemShape = new ItemResponseShapeType();
+		$request->ItemShape->BaseShape = DefaultShapeNamesType::DEFAULT_PROPERTIES;
+
+		$response = $this->client->GetItem($request);
+
+		$bodies = [];
+
+		// Iterate over the results, printing any error messages or message subjects.
+		foreach ($response->ResponseMessages->GetItemResponseMessage as $getItem) {
+			// Make sure the request succeeded.
+			if ($getItem->ResponseClass !== ResponseClassType::SUCCESS) {
+				$code = $getItem->ResponseCode;
+				$message = $getItem->MessageText;
+
+				// @TODO: Throw exception instead
+				fwrite(
+					STDERR,
+					"Failed to search for messages with \"$code: $message\"\n"
+				);
+				continue;
+			}
+
+			foreach ($getItem->Items->Message as $message) {
+				$bodies[] = $message->Body->_;
+			}
+		}
+
+		return $bodies;
+	}
+
+
+	/**
 	 * @return string[]
 	 */
-	public function getMessagesIds(): array
+	public function findMessagesIds(): array
 	{
 		$request = new FindItemType();
 		$request->ParentFolderIds = new NonEmptyArrayOfBaseFolderIdsType();
@@ -95,7 +145,7 @@ final class MailClient
 		$request->Restriction->And->Contains = $subject;
 		$request->Restriction->And->IsEqualTo = $sender;
 
-		// Return just ids.
+		// Return mode - just ids.
 		$request->ItemShape = new ItemResponseShapeType();
 		$request->ItemShape->BaseShape = DefaultShapeNamesType::ID_ONLY;
 
@@ -125,7 +175,6 @@ final class MailClient
 			// Iterate over the messages that were found, printing the subject for each.
 			$items = $foundItem->RootFolder->Items->Message;
 			foreach ($items as $item) {
-				// $id = $item->ItemId->ChangeKey; // What is it?
 				$ids[] = $item->ItemId->Id;
 			}
 		}
