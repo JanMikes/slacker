@@ -38,11 +38,15 @@
     <parameter key="data_collector.templates" type="collection"/>
     <parameter key="debug.error_handler.throw_at">-1</parameter>
     <parameter key="debug.container.dump">/Users/janmikes/Sites/slacker/var/cache/dev/JanMikes_Slacker_SlackerKernelDevDebugContainer.xml</parameter>
-    <parameter key="console.command.ids" type="collection"/>
+    <parameter key="console.command.ids" type="collection">
+      <parameter>console.command.public_alias.JanMikes\Slacker\CheckMailCommand</parameter>
+    </parameter>
   </parameters>
   <services>
     <service id="service_container" class="Symfony\Component\DependencyInjection\ContainerInterface" public="true" synthetic="true"/>
-    <service id="JanMikes\Slacker\EmailClient" class="JanMikes\Slacker\EmailClient" autowire="true" autoconfigure="true"/>
+    <service id="JanMikes\Slacker\CheckMailCommand" class="JanMikes\Slacker\CheckMailCommand" autowire="true" autoconfigure="true">
+      <tag name="console.command"/>
+    </service>
     <service id="controller_resolver" class="Symfony\Bundle\FrameworkBundle\Controller\ControllerResolver" public="false">
       <tag name="monolog.logger" channel="request"/>
       <argument type="service" id="service_container"/>
@@ -809,6 +813,8 @@
         <argument type="service" id="mime_types"/>
       </call>
     </service>
+    <service id=".instanceof.Symfony\Component\Console\Command\Command.0.JanMikes\Slacker\CheckMailCommand" class="JanMikes\Slacker\CheckMailCommand" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.JanMikes\Slacker\CheckMailCommand" class="JanMikes\Slacker\CheckMailCommand" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".service_locator.CmORmuK" class="Symfony\Component\DependencyInjection\ServiceLocator" public="false">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -943,5 +949,6 @@
     <service id="container.env_var_processors_locator" alias=".service_locator.CmORmuK" public="true"/>
     <service id="argument_resolver.controller_locator" alias=".service_locator.I3K77mT"/>
     <service id="Psr\Log\LoggerInterface" alias="logger" public="false"/>
+    <service id="console.command.public_alias.JanMikes\Slacker\CheckMailCommand" alias="JanMikes\Slacker\CheckMailCommand" public="true"/>
   </services>
 </container>

@@ -1,6 +1,12 @@
 {
+    "jamesiarmes/php-ntlm": {
+        "version": "1.0.0"
+    },
     "php": {
         "version": "7.3"
+    },
+    "php-ews/php-ews": {
+        "version": "1.0.0"
     },
     "psr/cache": {
         "version": "1.0.1"

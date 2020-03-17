@@ -24,7 +24,7 @@ class SlackerKernel extends BaseKernel
 	/**
 	 * @inheritDoc
 	 */
-	public function registerContainerConfiguration(LoaderInterface $loader)
+	public function registerContainerConfiguration(LoaderInterface $loader): void
 	{
         $confDir = __DIR__ . '/../config';
 
