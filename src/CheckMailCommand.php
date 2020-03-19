@@ -63,6 +63,7 @@ final class CheckMailCommand extends Command
 			$bodies = $this->mailClient->getBodies($messages);
 
 			foreach ($bodies as $messageId => $body) {
+				$output->write(sprintf('Started processing message: %s', $messageId));
 				$url = $this->urlExtractor->extract($body);
 
 				$output->writeln(sprintf('Sending authorized request to %s', $url));
@@ -71,9 +72,13 @@ final class CheckMailCommand extends Command
 				$responseBody = $response->getBody()->getContents();
 
 				$output->writeln(sprintf('Response: %s', $responseBody));
-				// @TODO: mark as read
+
+				$this->mailClient->markMessageAsRead($messageId);
+				$output->writeln('Marked message as read');
 
 				$alreadyProcessedMessages[] = $messageId;
+				$output->writeln('Processing message finished');
+				$output->writeln('---');
 			}
 
 			$nextCheckMinutes = random_int(1, 9);

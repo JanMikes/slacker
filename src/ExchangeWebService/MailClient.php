@@ -118,7 +118,7 @@ final class MailClient
 	 */
 	public function findMessagesIds(): array
 	{
-		// @TODO: make it only unread items
+		// @TODO: find only unread items
 
 		$request = new FindItemType();
 		$request->ParentFolderIds = new NonEmptyArrayOfBaseFolderIdsType();
@@ -186,5 +186,11 @@ final class MailClient
 		}
 
 		return $ids;
+	}
+
+
+	public function markMessageAsRead(string $messageId): void
+	{
+
 	}
 }
