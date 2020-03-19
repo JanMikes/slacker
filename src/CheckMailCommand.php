@@ -20,13 +20,19 @@ final class CheckMailCommand extends Command
 	 */
 	private $urlExtractor;
 
+	/**
+	 * @var HttpClient
+	 */
+	private $httpClient;
 
-	public function __construct(MailClient $mailClient, UrlExtractor $urlExtractor)
+
+	public function __construct(MailClient $mailClient, UrlExtractor $urlExtractor, HttpClient $httpClient)
 	{
 		parent::__construct();
 
 		$this->mailClient = $mailClient;
 		$this->urlExtractor = $urlExtractor;
+		$this->httpClient = $httpClient;
 	}
 
 
@@ -59,9 +65,12 @@ final class CheckMailCommand extends Command
 			foreach ($bodies as $messageId => $body) {
 				$url = $this->urlExtractor->extract($body);
 
-				$output->writeln(sprintf('Clicking url %s', $url));
+				$output->writeln(sprintf('Sending authorized request to %s', $url));
 
-				// @TODO: click
+				$response = $this->httpClient->click($url);
+				$responseBody = $response->getBody()->getContents();
+
+				$output->writeln(sprintf('Response: %s', $responseBody));
 				// @TODO: mark as read
 
 				$alreadyProcessedMessages[] = $messageId;

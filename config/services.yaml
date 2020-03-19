@@ -15,3 +15,8 @@ services:
             $exchangePassword: '%env(SLACKER_EXCHANGE_PASSWORD)%'
             $messageSender: '%env(SLACKER_MESSAGE_SENDER)%'
             $messageSubject: '%env(SLACKER_MESSAGE_SUBJECT)%'
+
+    JanMikes\Slacker\HttpClient:
+        arguments:
+            $user: '%env(SLACKER_EXCHANGE_USER)%'
+            $password: '%env(SLACKER_EXCHANGE_PASSWORD)%'
