@@ -15,12 +15,18 @@ final class CheckMailCommand extends Command
 	 */
 	private $mailClient;
 
+	/**
+	 * @var UrlExtractor
+	 */
+	private $urlExtractor;
 
-	public function __construct(MailClient $mailClient)
+
+	public function __construct(MailClient $mailClient, UrlExtractor $urlExtractor)
 	{
 		parent::__construct();
 
 		$this->mailClient = $mailClient;
+		$this->urlExtractor = $urlExtractor;
 	}
 
 
@@ -32,16 +38,40 @@ final class CheckMailCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output): int
 	{
-		$messages = $this->mailClient->findMessagesIds();
-		$bodies = $this->mailClient->getBodies($messages);
+		$alreadyProcessedMessages = [];
 
-		foreach ($bodies as $body) {
-			$match = Strings::match($body, '/<a tabindex=\"1\" href=\"(?<url>\S+)\"/');
+		while(true) {
+			$output->writeln(sprintf('Starting check (%s)', date('H:i:s')));
 
-			$output->writeln($match['url']);
+			$messages = $this->mailClient->findMessagesIds();
+
+			foreach ($messages as $key => $messageId) {
+				if (in_array($messageId, $alreadyProcessedMessages, true)) {
+					unset($messages[$messageId]);
+					$output->write(sprintf('Message already processed, skipping: %s', $messageId));
+
+					continue;
+				}
+			}
+
+			$bodies = $this->mailClient->getBodies($messages);
+
+			foreach ($bodies as $messageId => $body) {
+				$url = $this->urlExtractor->extract($body);
+
+				$output->writeln(sprintf('Clicking url %s', $url));
+
+				// @TODO: click
+				// @TODO: mark as read
+
+				$alreadyProcessedMessages[] = $messageId;
+			}
+
+			$nextCheckMinutes = random_int(1, 9);
+			$output->writeln("Next check in $nextCheckMinutes minutes");
+			sleep(5);
+			// sleep(60 * $nextCheckMinutes);
 		}
-
-		// @TODO after clicking update all messages, mark as read
 
 		return 0;
 	}

@@ -69,6 +69,10 @@ final class MailClient
 	 */
 	public function getBodies(array $messagesIds): array
 	{
+		if (empty($messagesIds)) {
+			return [];
+		}
+
 		$request = new GetItemType();
 		$request->ItemIds = new NonEmptyArrayOfBaseItemIdsType();
 		$request->ItemIds->ItemId = array_map(static function(string $messageId) {
@@ -101,7 +105,7 @@ final class MailClient
 			}
 
 			foreach ($getItem->Items->Message as $message) {
-				$bodies[] = $message->Body->_;
+				$bodies[$message->ItemId->Id] = $message->Body->_;
 			}
 		}
 
