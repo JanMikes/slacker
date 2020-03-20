@@ -48,6 +48,7 @@ final class CheckMailCommand extends Command
 		$alreadyProcessedMessages = [];
 
 		while(true) {
+			$output->writeln('---');
 			$output->writeln(sprintf('Starting check (%s)', date('H:i:s')));
 
 			try {
@@ -55,27 +56,31 @@ final class CheckMailCommand extends Command
 
 				foreach ($messages as $key => $messageId) {
 					if (in_array($messageId, $alreadyProcessedMessages, TRUE)) {
-						unset($messages[$messageId]);
-						$output->write(sprintf('Message already processed, skipping: %s', $messageId));
+						unset($messages[$key]);
+						$output->writeln(sprintf('Message already processed, skipping: %s', $messageId));
 
 						continue;
 					}
 				}
 
-				$bodies = $this->mailClient->getBodies($messages);
+				if (empty($messages)) {
+					$output->writeln('No messages found to process');
+				}
 
-				foreach ($bodies as $messageId => $body) {
-					$output->write(sprintf('Started processing message: %s', $messageId));
-					$url = $this->urlExtractor->extract($body);
+				$bodies = $this->mailClient->getMessages($messages);
+
+				foreach ($bodies as $messageId => $message) {
+					$output->writeln('---');
+					$output->writeln(sprintf('Started processing message: %s', $messageId));
+					$url = $this->urlExtractor->extract($message->Body->_);
 
 					$output->writeln(sprintf('Sending authorized request to %s', $url));
 					// $response = $this->httpClient->click($url);
-					$response = $this->httpClient->click('https://google.com');
-					$responseBody = $response->getBody()->getContents();
+					// $responseBody = $response->getBody()->getContents();
 
-					$output->writeln(sprintf('Response: %s', Strings::truncate($responseBody, 200)));
+					// $output->writeln(sprintf('Response: %s', Strings::truncate($responseBody, 200)));
 
-					$this->mailClient->markMessageAsRead($messageId);
+					$this->mailClient->markMessageAsRead($message);
 					$output->writeln('Marked message as read');
 
 					$alreadyProcessedMessages[] = $messageId;
@@ -85,12 +90,14 @@ final class CheckMailCommand extends Command
 
 			} catch (ExchangeWebServiceException $exception) {
 				$output->writeln($exception->getMessage());
-			} finally {
-				$nextCheckMinutes = random_int(1, 9);
-				$output->writeln("Next check in $nextCheckMinutes minutes");
-				sleep(5);
-				// sleep(60 * $nextCheckMinutes);
+			} catch (\Throwable $exception) {
+				throw $exception;
 			}
+
+			$nextCheckMinutes = random_int(1, 9);
+			$output->writeln("Next check in $nextCheckMinutes minutes");
+			$output->writeln('---');
+			sleep(60 * $nextCheckMinutes);
 		}
 	}
 }

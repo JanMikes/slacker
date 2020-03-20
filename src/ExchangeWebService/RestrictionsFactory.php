@@ -11,7 +11,6 @@ use jamesiarmes\PhpEws\Type\IsEqualToType;
 use jamesiarmes\PhpEws\Type\IsNotEqualToType;
 use jamesiarmes\PhpEws\Type\PathToUnindexedFieldType;
 use jamesiarmes\PhpEws\Type\RestrictionType;
-use jamesiarmes\PhpEws\Type\SearchExpressionType;
 
 final class RestrictionsFactory
 {
@@ -31,7 +30,7 @@ final class RestrictionsFactory
 	}
 
 
-	private function createSubjectRestriction(string $subject): SearchExpressionType
+	private function createSubjectRestriction(string $subject): ContainsExpressionType
 	{
 		$restriction = new ContainsExpressionType();
 		$restriction->FieldURI = new PathToUnindexedFieldType();
@@ -43,7 +42,7 @@ final class RestrictionsFactory
 	}
 
 
-	private function createSenderRestriction(string $sender): SearchExpressionType
+	private function createSenderRestriction(string $sender): IsEqualToType
 	{
 		$restriction = new IsEqualToType();
 		$restriction->FieldURI = new PathToUnindexedFieldType();
@@ -56,14 +55,14 @@ final class RestrictionsFactory
 	}
 
 
-	private function createUnreadRestriction(): SearchExpressionType
+	private function createUnreadRestriction(): IsNotEqualToType
 	{
 		$restriction = new IsNotEqualToType();
 		$restriction->FieldURI = new PathToUnindexedFieldType();
 		$restriction->FieldURI->FieldURI = UnindexedFieldURIType::MESSAGE_IS_READ;
 		$restriction->FieldURIOrConstant = new FieldURIOrConstantType();
 		$restriction->FieldURIOrConstant->Constant = new ConstantValueType();
-		$restriction->FieldURIOrConstant->Constant->Value = true;
+		$restriction->FieldURIOrConstant->Constant->Value = 'true';
 
 		return $restriction;
 	}

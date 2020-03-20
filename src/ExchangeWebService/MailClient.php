@@ -8,8 +8,10 @@ use jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfItemChangeDescriptionsType;
 use jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfItemChangesType;
 use jamesiarmes\PhpEws\Autodiscover;
 use jamesiarmes\PhpEws\Client;
+use jamesiarmes\PhpEws\Enumeration\ConflictResolutionType;
 use jamesiarmes\PhpEws\Enumeration\DefaultShapeNamesType;
 use jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType;
+use jamesiarmes\PhpEws\Enumeration\MessageDispositionType;
 use jamesiarmes\PhpEws\Enumeration\ResponseClassType;
 use jamesiarmes\PhpEws\Enumeration\UnindexedFieldURIType;
 use jamesiarmes\PhpEws\Request\FindItemType;
@@ -25,6 +27,7 @@ use jamesiarmes\PhpEws\Type\IsGreaterThanOrEqualToType;
 use jamesiarmes\PhpEws\Type\ItemChangeType;
 use jamesiarmes\PhpEws\Type\ItemIdType;
 use jamesiarmes\PhpEws\Type\ItemResponseShapeType;
+use jamesiarmes\PhpEws\Type\MessageType;
 use jamesiarmes\PhpEws\Type\PathToUnindexedFieldType;
 use jamesiarmes\PhpEws\Type\RestrictionType;
 use jamesiarmes\PhpEws\Type\SetItemFieldType;
@@ -86,9 +89,9 @@ final class MailClient
 	/**
 	 * @param string[] $messagesIds
 	 *
-	 * @return string[]
+	 * @return MessageType[]
 	 */
-	public function getBodies(array $messagesIds): array
+	public function getMessages(array $messagesIds): array
 	{
 		if (empty($messagesIds)) {
 			return [];
@@ -125,7 +128,7 @@ final class MailClient
 			}
 
 			foreach ($getItem->Items->Message as $message) {
-				$bodies[$message->ItemId->Id] = $message->Body->_;
+				$bodies[$message->ItemId->Id] = $message;
 			}
 		}
 
@@ -182,19 +185,25 @@ final class MailClient
 	}
 
 
-	public function markMessageAsRead(string $messageId): void
+	public function markMessageAsRead(MessageType $message): void
 	{
+		$request = new UpdateItemType();
+		$request->ConflictResolution = ConflictResolutionType::ALWAYS_OVERWRITE;
+		$request->MessageDisposition = MessageDispositionType::SAVE_ONLY;
+		$request->ItemChanges = new NonEmptyArrayOfItemChangesType();
+
 		$readChange = new ItemChangeType();
-		$readChange->ItemId = $messageId;
+		$readChange->ItemId = $message->ItemId;
 		$readChange->Updates = new NonEmptyArrayOfItemChangeDescriptionsType();
 
 		$setItemFieldType = new SetItemFieldType();
+		$setItemFieldType->FieldURI = new PathToUnindexedFieldType();
+		$setItemFieldType->FieldURI->FieldURI = UnindexedFieldURIType::MESSAGE_IS_READ;
+		$setItemFieldType->Message = new MessageType();
 		$setItemFieldType->Message->IsRead = true;
 
 		$readChange->Updates->SetItemField[] = $setItemFieldType;
 
-		$request = new UpdateItemType();
-		$request->ItemChanges = new NonEmptyArrayOfItemChangesType();
 		$request->ItemChanges->ItemChange[] = $readChange;
 
 		$response = $this->client->UpdateItem($request);
@@ -204,12 +213,12 @@ final class MailClient
 			// Make sure the request succeeded.
 			if ($updatedItem->ResponseClass !== ResponseClassType::SUCCESS) {
 				$code = $updatedItem->ResponseCode;
-				$message = $updatedItem->MessageText;
+				$resultMessage = $updatedItem->MessageText;
 
 				throw new ExchangeWebServiceException(sprintf(
-					'Failed to search messages with %s: %s',
+					'Failed to update message with %s: %s',
 					$code,
-					$message
+					$resultMessage
 				));
 			}
 		}
