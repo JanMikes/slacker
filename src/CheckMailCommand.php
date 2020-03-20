@@ -85,10 +85,10 @@ final class CheckMailCommand extends Command
 					$url = $this->urlExtractor->extract($message->Body->_);
 
 					$this->logger->info(sprintf('Sending authorized request to %s', $url));
-					// $response = $this->httpClient->click($url);
-					// $responseBody = $response->getBody()->getContents();
+					$response = $this->httpClient->click($url);
+					$responseBody = $response->getBody()->getContents();
 
-					// $this->>logger->info(sprintf('Response: %s', Strings::truncate($responseBody, 200)));
+					$this->logger->info(sprintf('Response: %s', Strings::truncate($responseBody, 200)));
 
 					$this->mailClient->markMessageAsRead($message);
 					$this->logger->info('Marked message as read');
