@@ -5,6 +5,7 @@ namespace JanMikes\Slacker;
 use JanMikes\Slacker\ExchangeWebService\Exceptions\ExchangeWebServiceException;
 use JanMikes\Slacker\ExchangeWebService\MailClient;
 use Nette\Utils\Strings;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -26,14 +27,25 @@ final class CheckMailCommand extends Command
 	 */
 	private $httpClient;
 
+	/**
+	 * @var LoggerInterface
+	 */
+	private $logger;
 
-	public function __construct(MailClient $mailClient, UrlExtractor $urlExtractor, HttpClient $httpClient)
+
+	public function __construct(
+		MailClient $mailClient,
+		UrlExtractor $urlExtractor,
+		HttpClient $httpClient,
+		LoggerInterface $logger
+	)
 	{
 		parent::__construct();
 
 		$this->mailClient = $mailClient;
 		$this->urlExtractor = $urlExtractor;
 		$this->httpClient = $httpClient;
+		$this->logger = $logger;
 	}
 
 
@@ -48,8 +60,7 @@ final class CheckMailCommand extends Command
 		$alreadyProcessedMessages = [];
 
 		while(true) {
-			$output->writeln('---');
-			$output->writeln(sprintf('Starting check (%s)', date('H:i:s')));
+			$this->logger->info('Starting check run');
 
 			try {
 				$messages = $this->mailClient->findUnreadMessages();
@@ -57,46 +68,45 @@ final class CheckMailCommand extends Command
 				foreach ($messages as $key => $messageId) {
 					if (in_array($messageId, $alreadyProcessedMessages, TRUE)) {
 						unset($messages[$key]);
-						$output->writeln(sprintf('Message already processed, skipping: %s', $messageId));
+						$this->logger->notice(sprintf('Message already processed, skipping: %s', $messageId));
 
 						continue;
 					}
 				}
 
 				if (empty($messages)) {
-					$output->writeln('No messages found to process');
+					$this->logger->info('No new messages found');
 				}
 
 				$bodies = $this->mailClient->getMessages($messages);
 
 				foreach ($bodies as $messageId => $message) {
-					$output->writeln('---');
-					$output->writeln(sprintf('Started processing message: %s', $messageId));
+					$this->logger->info(sprintf('Started processing message: %s', $messageId));
 					$url = $this->urlExtractor->extract($message->Body->_);
 
-					$output->writeln(sprintf('Sending authorized request to %s', $url));
+					$this->logger->info(sprintf('Sending authorized request to %s', $url));
 					// $response = $this->httpClient->click($url);
 					// $responseBody = $response->getBody()->getContents();
 
-					// $output->writeln(sprintf('Response: %s', Strings::truncate($responseBody, 200)));
+					// $this->>logger->info(sprintf('Response: %s', Strings::truncate($responseBody, 200)));
 
 					$this->mailClient->markMessageAsRead($message);
-					$output->writeln('Marked message as read');
+					$this->logger->info('Marked message as read');
 
 					$alreadyProcessedMessages[] = $messageId;
-					$output->writeln('Processing message finished');
-					$output->writeln('---');
+					$this->logger->info('Processing message finished');
 				}
 
 			} catch (ExchangeWebServiceException $exception) {
-				$output->writeln($exception->getMessage());
+				$this->logger->error($exception->getMessage());
 			} catch (\Throwable $exception) {
+				$this->logger->critical($exception->getMessage());
+
 				throw $exception;
 			}
 
 			$nextCheckMinutes = random_int(1, 9);
-			$output->writeln("Next check in $nextCheckMinutes minutes");
-			$output->writeln('---');
+			$this->logger->info("Next check in $nextCheckMinutes minutes");
 			sleep(60 * $nextCheckMinutes);
 		}
 	}

@@ -33,5 +33,4 @@ RUN mkdir -p ./var/cache \
 
 COPY . .
 
-ENTRYPOINT [ 'bin/console' ]
-CMD [ 'check-mail' ]
+CMD ["php","bin/console","check-mail"]
