@@ -136,16 +136,13 @@ final class MailClient
 		$senderRestriction = $this->restrictionsFactory->createSenderRestriction($this->messageSender);
 		$unreadRestriction = $this->restrictionsFactory->createUnreadRestriction();
 
-		// Build the restriction.
-		$request->Restriction = new RestrictionType();
-		$request->Restriction->And = new AndType();
-		$request->Restriction->And->IsEqualTo = $senderRestriction;
-		$request->Restriction->And->And = new AndType();
-		$request->Restriction->And->And->IsEqualTo = $subjectRestriction;
-		$request->Restriction->And->And->And = new AndType();
-		$request->Restriction->And->And->And->IsEqualTo = $unreadRestriction;
+		$request->Restriction = $this->restrictionsFactory->createRestrictions([
+			$subjectRestriction,
+			$senderRestriction,
+			$unreadRestriction
+		]);
 
-		// Return mode - just ids.
+		// Return mode - just ids
 		$request->ItemShape = new ItemResponseShapeType();
 		$request->ItemShape->BaseShape = DefaultShapeNamesType::ID_ONLY;
 

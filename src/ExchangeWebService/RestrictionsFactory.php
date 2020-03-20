@@ -3,10 +3,13 @@
 namespace JanMikes\Slacker\ExchangeWebService;
 
 use jamesiarmes\PhpEws\Enumeration\UnindexedFieldURIType;
+use jamesiarmes\PhpEws\Type\AndType;
 use jamesiarmes\PhpEws\Type\ConstantValueType;
 use jamesiarmes\PhpEws\Type\FieldURIOrConstantType;
 use jamesiarmes\PhpEws\Type\IsEqualToType;
+use jamesiarmes\PhpEws\Type\MultipleOperandBooleanExpressionType;
 use jamesiarmes\PhpEws\Type\PathToUnindexedFieldType;
+use jamesiarmes\PhpEws\Type\RestrictionType;
 use jamesiarmes\PhpEws\Type\SearchExpressionType;
 
 final class RestrictionsFactory
@@ -47,5 +50,26 @@ final class RestrictionsFactory
 		$restriction->FieldURIOrConstant->Constant->Value = false;
 
 		return $restriction;
+	}
+
+
+	/**
+	 * @param SearchExpressionType[]
+	 */
+	public function createRestrictions(array $restrictions): RestrictionType
+	{
+		$groupRestriction = new RestrictionType();
+		$tempGroupRestriction = $groupRestriction;
+
+		foreach ($restrictions as $restriction) {
+			if (isset($tempGroupRestriction->IsEqualTo)) {
+				$tempGroupRestriction->And = new AndType();
+				$tempGroupRestriction = $tempGroupRestriction->And;
+			}
+
+			$tempGroupRestriction->IsEqualTo = $restriction;
+		}
+
+		return $groupRestriction;
 	}
 }
