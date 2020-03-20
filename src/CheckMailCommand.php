@@ -2,6 +2,7 @@
 
 namespace JanMikes\Slacker;
 
+use JanMikes\Slacker\ExchangeWebService\Exceptions\ExchangeWebServiceException;
 use JanMikes\Slacker\ExchangeWebService\MailClient;
 use Nette\Utils\Strings;
 use Symfony\Component\Console\Command\Command;
@@ -49,42 +50,47 @@ final class CheckMailCommand extends Command
 		while(true) {
 			$output->writeln(sprintf('Starting check (%s)', date('H:i:s')));
 
-			$messages = $this->mailClient->findMessagesIds();
+			try {
+				$messages = $this->mailClient->findMessagesIds();
 
-			foreach ($messages as $key => $messageId) {
-				if (in_array($messageId, $alreadyProcessedMessages, true)) {
-					unset($messages[$messageId]);
-					$output->write(sprintf('Message already processed, skipping: %s', $messageId));
+				foreach ($messages as $key => $messageId) {
+					if (in_array($messageId, $alreadyProcessedMessages, TRUE)) {
+						unset($messages[$messageId]);
+						$output->write(sprintf('Message already processed, skipping: %s', $messageId));
 
-					continue;
+						continue;
+					}
 				}
+
+				$bodies = $this->mailClient->getBodies($messages);
+
+				foreach ($bodies as $messageId => $body) {
+					$output->write(sprintf('Started processing message: %s', $messageId));
+					$url = $this->urlExtractor->extract($body);
+
+					$output->writeln(sprintf('Sending authorized request to %s', $url));
+
+					$response = $this->httpClient->click($url);
+					$responseBody = $response->getBody()->getContents();
+
+					$output->writeln(sprintf('Response: %s', $responseBody));
+
+					$this->mailClient->markMessageAsRead($messageId);
+					$output->writeln('Marked message as read');
+
+					$alreadyProcessedMessages[] = $messageId;
+					$output->writeln('Processing message finished');
+					$output->writeln('---');
+				}
+
+			} catch (ExchangeWebServiceException $exception) {
+				$output->writeln($exception->getMessage());
+			} finally {
+				$nextCheckMinutes = random_int(1, 9);
+				$output->writeln("Next check in $nextCheckMinutes minutes");
+				sleep(5);
+				// sleep(60 * $nextCheckMinutes);
 			}
-
-			$bodies = $this->mailClient->getBodies($messages);
-
-			foreach ($bodies as $messageId => $body) {
-				$output->write(sprintf('Started processing message: %s', $messageId));
-				$url = $this->urlExtractor->extract($body);
-
-				$output->writeln(sprintf('Sending authorized request to %s', $url));
-
-				$response = $this->httpClient->click($url);
-				$responseBody = $response->getBody()->getContents();
-
-				$output->writeln(sprintf('Response: %s', $responseBody));
-
-				$this->mailClient->markMessageAsRead($messageId);
-				$output->writeln('Marked message as read');
-
-				$alreadyProcessedMessages[] = $messageId;
-				$output->writeln('Processing message finished');
-				$output->writeln('---');
-			}
-
-			$nextCheckMinutes = random_int(1, 9);
-			$output->writeln("Next check in $nextCheckMinutes minutes");
-			sleep(5);
-			// sleep(60 * $nextCheckMinutes);
 		}
 
 		return 0;

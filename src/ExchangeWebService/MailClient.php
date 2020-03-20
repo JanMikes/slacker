@@ -23,6 +23,7 @@ use jamesiarmes\PhpEws\Type\ItemIdType;
 use jamesiarmes\PhpEws\Type\ItemResponseShapeType;
 use jamesiarmes\PhpEws\Type\PathToUnindexedFieldType;
 use jamesiarmes\PhpEws\Type\RestrictionType;
+use JanMikes\Slacker\ExchangeWebService\Exceptions\ExchangeWebServiceException;
 
 final class MailClient
 {
@@ -50,11 +51,15 @@ final class MailClient
 		string $messageSender
 	)
 	{
-		$client = Autodiscover::getEWS($exchangeEmail, $exchangePassword, $exchangeUser);
+		$attempts = 0;
+		do {
+			if ($attempts >= 5) {
+				throw new \RuntimeException('Could not autodiscover exchange settings from credentials.');
+			}
 
-		if (!$client) {
-			throw new \RuntimeException('Could not autodiscover exchange settings from credentials.');
-		}
+			$attempts++;
+			$client = Autodiscover::getEWS($exchangeEmail, $exchangePassword, $exchangeUser);
+		} while (!$client);
 
 		$this->client = $client;
 		$this->messageSubject = $messageSubject;
@@ -96,12 +101,11 @@ final class MailClient
 				$code = $getItem->ResponseCode;
 				$message = $getItem->MessageText;
 
-				// @TODO: Throw exception instead
-				fwrite(
-					STDERR,
-					"Failed to search for messages with \"$code: $message\"\n"
-				);
-				continue;
+				throw new ExchangeWebServiceException(sprintf(
+					'Failed to get messages with %s: %s',
+					$code,
+					$message
+				));
 			}
 
 			foreach ($getItem->Items->Message as $message) {
@@ -170,12 +174,11 @@ final class MailClient
 				$code = $foundItem->ResponseCode;
 				$message = $foundItem->MessageText;
 
-				// @TODO: Throw exception instead
-				fwrite(
-					STDERR,
-					"Failed to search for messages with \"$code: $message\"\n"
-				);
-				continue;
+				throw new ExchangeWebServiceException(sprintf(
+					'Failed to search messages with %s: %s',
+					$code,
+					$message
+				));
 			}
 
 			// Iterate over the messages that were found, printing the subject for each.

@@ -6,7 +6,7 @@ services:
 
     JanMikes\Slacker\:
         resource: '../src/*'
-        exclude: '../src/{SlackerKernel.php}'
+        exclude: '../src/{SlackerKernel.php,**/Exceptions}'
 
     JanMikes\Slacker\ExchangeWebService\MailClient:
         arguments:
