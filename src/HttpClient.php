@@ -34,7 +34,9 @@ final class HttpClient
 	{
 		$client = $this->getClient();
 
-		return $client->get($url);
+		return $client->get($url, [
+			'verify' => false,
+		]);
 	}
 
 

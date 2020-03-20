@@ -105,7 +105,7 @@ final class CheckMailCommand extends Command
 				throw $exception;
 			}
 
-			$nextCheckMinutes = random_int(1, 9);
+			$nextCheckMinutes = random_int(1, 5);
 			$this->logger->info("Next check in $nextCheckMinutes minutes");
 			sleep(60 * $nextCheckMinutes);
 		}
