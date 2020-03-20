@@ -65,6 +65,10 @@ final class MailClient
 
 			$attempts++;
 			$client = Autodiscover::getEWS($exchangeEmail, $exchangePassword, $exchangeUser);
+
+			if (!$client) {
+				sleep(3);
+			}
 		} while (!$client);
 
 		$this->client = $client;
@@ -132,19 +136,13 @@ final class MailClient
 		$request = new FindItemType();
 		$request->ParentFolderIds = new NonEmptyArrayOfBaseFolderIdsType();
 
-		$subjectRestriction = $this->restrictionsFactory->createSubjectRestriction($this->messageSubject);
-		$senderRestriction = $this->restrictionsFactory->createSenderRestriction($this->messageSender);
-		$unreadRestriction = $this->restrictionsFactory->createUnreadRestriction();
+		$request->Restriction = $this->restrictionsFactory->createRestrictions(
+			$this->messageSubject,
+			$this->messageSender
+		);
 
-		$request->Restriction = $this->restrictionsFactory->createRestrictions([
-			$subjectRestriction,
-			$senderRestriction,
-			$unreadRestriction
-		]);
-
-		// Return mode - just ids
 		$request->ItemShape = new ItemResponseShapeType();
-		$request->ItemShape->BaseShape = DefaultShapeNamesType::ID_ONLY;
+		$request->ItemShape->BaseShape = DefaultShapeNamesType::ALL_PROPERTIES;
 
 		// Search in the user's inbox.
 		$folder = new DistinguishedFolderIdType();
