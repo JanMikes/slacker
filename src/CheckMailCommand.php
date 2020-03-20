@@ -43,7 +43,7 @@ final class CheckMailCommand extends Command
 	}
 
 
-	protected function execute(InputInterface $input, OutputInterface $output): int
+	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$alreadyProcessedMessages = [];
 
@@ -92,7 +92,5 @@ final class CheckMailCommand extends Command
 				// sleep(60 * $nextCheckMinutes);
 			}
 		}
-
-		return 0;
 	}
 }

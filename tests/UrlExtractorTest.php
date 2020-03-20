@@ -19,6 +19,9 @@ class UrlExtractorTest extends TestCase
 	}
 
 
+	/**
+	 * @return \Generator<mixed>
+	 */
 	public function provideExtractData(): \Generator
 	{
 		yield [file_get_contents(__DIR__ . '/mail.html')];

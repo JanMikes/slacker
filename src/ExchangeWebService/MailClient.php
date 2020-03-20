@@ -70,7 +70,7 @@ final class MailClient
 	/**
 	 * @param string[] $messagesIds
 	 *
-	 * return string[]
+	 * @return string[]
 	 */
 	public function getBodies(array $messagesIds): array
 	{
