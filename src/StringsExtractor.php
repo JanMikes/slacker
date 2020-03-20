@@ -4,9 +4,9 @@ namespace JanMikes\Slacker;
 
 use Nette\Utils\Strings;
 
-final class UrlExtractor
+final class StringsExtractor
 {
-	public function extract(string $mailBody): string
+	public function extractUrl(string $mailBody): string
 	{
 		$match = Strings::match($mailBody, '/<a tabindex=\"1\" href=\"(?<url>\S+)\"/');
 
@@ -15,5 +15,16 @@ final class UrlExtractor
 		}
 
 		return $match['url'];
+	}
+
+	public function extractReportText(string $content): string
+	{
+		$match = Strings::match($content, '/(?<text>Ověření([\w ]*))/u');
+
+		if (!isset($match['text'])) {
+			return 'Unknown';
+		}
+
+		return $match['text'];
 	}
 }

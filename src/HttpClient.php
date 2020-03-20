@@ -17,11 +17,6 @@ final class HttpClient
 	 */
 	private $password;
 
-	/**
-	 * @var Client|null
-	 */
-	private $client;
-
 
 	public function __construct(string $user, string $password)
 	{
@@ -34,9 +29,9 @@ final class HttpClient
 	{
 		$client = new Client();
 
-		return $client->get($url, [
+		return $client->get(html_entity_decode($url), [
 			'verify' => false,
-			'auth' => [$this->user, $this->password],
+			'auth' => [$this->user, $this->password, 'ntlm'],
 		]);
 	}
 }

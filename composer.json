@@ -20,7 +20,8 @@
         "symfony/framework-bundle": "5.0.*",
         "symfony/yaml": "5.0.*",
         "php-ews/php-ews": "^1.0",
-        "nette/utils": "^3.1"
+        "nette/utils": "^3.1",
+        "chrome-php/chrome": "^0.8.1"
     },
     "replace": {
         "paragonie/random_compat": "2.*",

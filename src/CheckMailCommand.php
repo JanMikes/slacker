@@ -4,7 +4,6 @@ namespace JanMikes\Slacker;
 
 use JanMikes\Slacker\ExchangeWebService\Exceptions\ExchangeWebServiceException;
 use JanMikes\Slacker\ExchangeWebService\MailClient;
-use Nette\Utils\Strings;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,9 +17,9 @@ final class CheckMailCommand extends Command
 	private $mailClient;
 
 	/**
-	 * @var UrlExtractor
+	 * @var StringsExtractor
 	 */
-	private $urlExtractor;
+	private $stringsExtractor;
 
 	/**
 	 * @var HttpClient
@@ -35,7 +34,7 @@ final class CheckMailCommand extends Command
 
 	public function __construct(
 		MailClient $mailClient,
-		UrlExtractor $urlExtractor,
+		StringsExtractor $stringsExtractor,
 		HttpClient $httpClient,
 		LoggerInterface $logger
 	)
@@ -43,9 +42,9 @@ final class CheckMailCommand extends Command
 		parent::__construct();
 
 		$this->mailClient = $mailClient;
-		$this->urlExtractor = $urlExtractor;
 		$this->httpClient = $httpClient;
 		$this->logger = $logger;
+		$this->stringsExtractor = $stringsExtractor;
 	}
 
 
@@ -82,13 +81,14 @@ final class CheckMailCommand extends Command
 
 				foreach ($bodies as $messageId => $message) {
 					$this->logger->info(sprintf('Started processing message: %s', $messageId));
-					$url = $this->urlExtractor->extract($message->Body->_);
+					$url = $this->stringsExtractor->extractUrl($message->Body->_);
 
 					$this->logger->info(sprintf('Sending authorized request to %s', $url));
 					$response = $this->httpClient->click($url);
 					$responseBody = $response->getBody()->getContents();
 
-					$this->logger->info(sprintf('Response: %s', Strings::truncate($responseBody, 200)));
+					$this->logger->info($responseBody);
+					$this->logger->info(sprintf('Response: %s', $this->stringsExtractor->extractReportText($responseBody)));
 
 					$this->mailClient->markMessageAsRead($message);
 					$this->logger->info('Marked message as read');
@@ -99,10 +99,6 @@ final class CheckMailCommand extends Command
 
 			} catch (ExchangeWebServiceException $exception) {
 				$this->logger->error($exception->getMessage());
-			} catch (\Throwable $exception) {
-				$this->logger->critical($exception->getMessage());
-
-				throw $exception;
 			}
 
 			$nextCheckMinutes = random_int(1, 5);
