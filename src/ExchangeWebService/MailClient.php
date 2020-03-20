@@ -132,24 +132,18 @@ final class MailClient
 		$request = new FindItemType();
 		$request->ParentFolderIds = new NonEmptyArrayOfBaseFolderIdsType();
 
-		// Message sender restriction
-		$sender = new IsEqualToType();
-		$sender->FieldURI = new PathToUnindexedFieldType();
-		$sender->FieldURI->FieldURI = UnindexedFieldURIType::MESSAGE_SENDER;
-		$sender->FieldURIOrConstant = new FieldURIOrConstantType();
-		$sender->FieldURIOrConstant->Constant = new ConstantValueType();
-		$sender->FieldURIOrConstant->Constant->Value = $this->messageSender;
-
 		$subjectRestriction = $this->restrictionsFactory->createSubjectRestriction($this->messageSubject);
+		$senderRestriction = $this->restrictionsFactory->createSenderRestriction($this->messageSender);
+		$unreadRestriction = $this->restrictionsFactory->createUnreadRestriction();
 
 		// Build the restriction.
 		$request->Restriction = new RestrictionType();
 		$request->Restriction->And = new AndType();
-		$request->Restriction->And->IsEqualTo = $sender;
+		$request->Restriction->And->IsEqualTo = $senderRestriction;
 		$request->Restriction->And->And = new AndType();
 		$request->Restriction->And->And->IsEqualTo = $subjectRestriction;
-		// $request->Restriction->And->And->And = new AndType();
-		// $request->Restriction->And->And->And->IsEqualTo = $unread;
+		$request->Restriction->And->And->And = new AndType();
+		$request->Restriction->And->And->And->IsEqualTo = $unreadRestriction;
 
 		// Return mode - just ids.
 		$request->ItemShape = new ItemResponseShapeType();

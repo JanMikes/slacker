@@ -22,4 +22,30 @@ final class RestrictionsFactory
 
 		return $restriction;
 	}
+
+
+	public function createSenderRestriction(string $sender): SearchExpressionType
+	{
+		$restriction = new IsEqualToType();
+		$restriction->FieldURI = new PathToUnindexedFieldType();
+		$restriction->FieldURI->FieldURI = UnindexedFieldURIType::MESSAGE_SENDER;
+		$restriction->FieldURIOrConstant = new FieldURIOrConstantType();
+		$restriction->FieldURIOrConstant->Constant = new ConstantValueType();
+		$restriction->FieldURIOrConstant->Constant->Value = $sender;
+
+		return $restriction;
+	}
+
+
+	public function createUnreadRestriction(): SearchExpressionType
+	{
+		$restriction = new IsEqualToType();
+		$restriction->FieldURI = new PathToUnindexedFieldType();
+		$restriction->FieldURI->FieldURI = UnindexedFieldURIType::MESSAGE_IS_READ;
+		$restriction->FieldURIOrConstant = new FieldURIOrConstantType();
+		$restriction->FieldURIOrConstant->Constant = new ConstantValueType();
+		$restriction->FieldURIOrConstant->Constant->Value = false;
+
+		return $restriction;
+	}
 }
