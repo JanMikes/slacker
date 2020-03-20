@@ -42,13 +42,19 @@ final class MailClient
 	 */
 	private $messageSender;
 
+	/**
+	 * @var RestrictionsFactory
+	 */
+	private $restrictionsFactory;
+
 
 	public function __construct(
 		string $exchangeEmail,
 		string $exchangeUser,
 		string $exchangePassword,
 		string $messageSubject,
-		string $messageSender
+		string $messageSender,
+		RestrictionsFactory $restrictionsFactory
 	)
 	{
 		$attempts = 0;
@@ -64,6 +70,7 @@ final class MailClient
 		$this->client = $client;
 		$this->messageSubject = $messageSubject;
 		$this->messageSender = $messageSender;
+		$this->restrictionsFactory = $restrictionsFactory;
 	}
 
 
@@ -120,19 +127,12 @@ final class MailClient
 	/**
 	 * @return string[]
 	 */
-	public function findMessagesIds(): array
+	public function findUnreadMessages(): array
 	{
-		// @TODO: find only unread items
-
 		$request = new FindItemType();
 		$request->ParentFolderIds = new NonEmptyArrayOfBaseFolderIdsType();
 
-		$subject = new ContainsExpressionType();
-		$subject->FieldURI = new PathToUnindexedFieldType();
-		$subject->FieldURI->FieldURI = UnindexedFieldURIType::ITEM_SUBJECT;
-		$subject->Constant = new ConstantValueType();
-		$subject->Constant->Value = $this->messageSubject;
-
+		// Message sender restriction
 		$sender = new IsEqualToType();
 		$sender->FieldURI = new PathToUnindexedFieldType();
 		$sender->FieldURI->FieldURI = UnindexedFieldURIType::MESSAGE_SENDER;
@@ -140,20 +140,16 @@ final class MailClient
 		$sender->FieldURIOrConstant->Constant = new ConstantValueType();
 		$sender->FieldURIOrConstant->Constant->Value = $this->messageSender;
 
-		// Build the start date restriction.
-		$startDate = new IsGreaterThanOrEqualToType();
-		$startDate->FieldURI = new PathToUnindexedFieldType();
-		$startDate->FieldURI->FieldURI = UnindexedFieldURIType::ITEM_DATE_TIME_RECEIVED;
-		$startDate->FieldURIOrConstant = new FieldURIOrConstantType();
-		$startDate->FieldURIOrConstant->Constant = new ConstantValueType();
-		$startDate->FieldURIOrConstant->Constant->Value = (new \DateTimeImmutable('yesterday'))->format('c');
+		$subjectRestriction = $this->restrictionsFactory->createSubjectRestriction($this->messageSubject);
 
 		// Build the restriction.
 		$request->Restriction = new RestrictionType();
 		$request->Restriction->And = new AndType();
-		$request->Restriction->And->IsGreaterThanOrEqualTo = $startDate;
-		$request->Restriction->And->Contains = $subject;
 		$request->Restriction->And->IsEqualTo = $sender;
+		$request->Restriction->And->And = new AndType();
+		$request->Restriction->And->And->IsEqualTo = $subjectRestriction;
+		// $request->Restriction->And->And->And = new AndType();
+		// $request->Restriction->And->And->And->IsEqualTo = $unread;
 
 		// Return mode - just ids.
 		$request->ItemShape = new ItemResponseShapeType();

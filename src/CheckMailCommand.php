@@ -51,7 +51,7 @@ final class CheckMailCommand extends Command
 			$output->writeln(sprintf('Starting check (%s)', date('H:i:s')));
 
 			try {
-				$messages = $this->mailClient->findMessagesIds();
+				$messages = $this->mailClient->findUnreadMessages();
 
 				foreach ($messages as $key => $messageId) {
 					if (in_array($messageId, $alreadyProcessedMessages, TRUE)) {
@@ -69,11 +69,11 @@ final class CheckMailCommand extends Command
 					$url = $this->urlExtractor->extract($body);
 
 					$output->writeln(sprintf('Sending authorized request to %s', $url));
-
-					$response = $this->httpClient->click($url);
+					// $response = $this->httpClient->click($url);
+					$response = $this->httpClient->click('https://google.com');
 					$responseBody = $response->getBody()->getContents();
 
-					$output->writeln(sprintf('Response: %s', $responseBody));
+					$output->writeln(sprintf('Response: %s', Strings::truncate($responseBody, 200)));
 
 					$this->mailClient->markMessageAsRead($messageId);
 					$output->writeln('Marked message as read');
