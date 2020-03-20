@@ -10,8 +10,10 @@ RUN apt-get update && apt-get install -y \
         zlib1g-dev \
         libicu-dev \
         libzip-dev \
+        libxml2-dev \
     && pecl -q install \
         zip \
+    && docker-php-ext-install soap \
     && docker-php-ext-enable zip
 
 
@@ -31,4 +33,5 @@ RUN mkdir -p ./var/cache \
 
 COPY . .
 
-ENTRYPOINT [ 'bin/console', 'check-mail' ]
+ENTRYPOINT [ 'bin/console' ]
+CMD [ 'check-mail' ]
