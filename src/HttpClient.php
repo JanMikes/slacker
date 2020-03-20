@@ -32,22 +32,11 @@ final class HttpClient
 
 	public function click(string $url): ResponseInterface
 	{
-		$client = $this->getClient();
+		$client = new Client();
 
 		return $client->get($url, [
 			'verify' => false,
+			'auth' => [$this->user, $this->password],
 		]);
-	}
-
-
-	private function getClient(): Client
-	{
-		if (!$this->client) {
-			$this->client = new Client([
-				'auth' => [$this->user, $this->password],
-			]);
-		}
-
-		return $this->client;
 	}
 }
