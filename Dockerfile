@@ -11,9 +11,11 @@ RUN apt-get update && apt-get install -y \
         libicu-dev \
         libzip-dev \
         libxml2-dev \
+        chromium \
     && pecl -q install \
         zip \
     && docker-php-ext-install soap \
+    && docker-php-ext-install sockets \
     && docker-php-ext-enable zip
 
 
