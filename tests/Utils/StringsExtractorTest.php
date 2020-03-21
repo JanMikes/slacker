@@ -1,8 +1,8 @@
 <?php declare (strict_types=1);
 
-namespace JanMikes\Slacker\Tests;
+namespace JanMikes\Slacker\Tests\Utils;
 
-use JanMikes\Slacker\StringsExtractor;
+use JanMikes\Slacker\Utils\StringsExtractor;
 use PHPUnit\Framework\TestCase;
 
 class StringsExtractorTest extends TestCase

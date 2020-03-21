@@ -1,9 +1,11 @@
 <?php declare (strict_types=1);
 
-namespace JanMikes\Slacker;
+namespace JanMikes\Slacker\Console;
 
+use JanMikes\Slacker\Browser\BrowserClient;
 use JanMikes\Slacker\ExchangeWebService\Exceptions\ExchangeWebServiceException;
 use JanMikes\Slacker\ExchangeWebService\MailClient;
+use JanMikes\Slacker\Utils\StringsExtractor;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,9 +24,9 @@ final class CheckMailCommand extends Command
 	private $stringsExtractor;
 
 	/**
-	 * @var HttpClient
+	 * @var BrowserClient
 	 */
-	private $httpClient;
+	private $browserClient;
 
 	/**
 	 * @var LoggerInterface
@@ -35,14 +37,14 @@ final class CheckMailCommand extends Command
 	public function __construct(
 		MailClient $mailClient,
 		StringsExtractor $stringsExtractor,
-		HttpClient $httpClient,
+		BrowserClient $browserClient,
 		LoggerInterface $logger
 	)
 	{
 		parent::__construct();
 
 		$this->mailClient = $mailClient;
-		$this->httpClient = $httpClient;
+		$this->browserClient = $browserClient;
 		$this->logger = $logger;
 		$this->stringsExtractor = $stringsExtractor;
 	}
@@ -84,11 +86,10 @@ final class CheckMailCommand extends Command
 					$url = $this->stringsExtractor->extractUrl($message->Body->_);
 
 					$this->logger->info(sprintf('Sending authorized request to %s', $url));
-					$response = $this->httpClient->click($url);
-					$responseBody = $response->getBody()->getContents();
+					$response = $this->browserClient->click($url);
 
-					$this->logger->info($responseBody);
-					$this->logger->info(sprintf('Response: %s', $this->stringsExtractor->extractReportText($responseBody)));
+					$this->logger->info($response);
+					$this->logger->info(sprintf('Response: %s', $this->stringsExtractor->extractReportText($response)));
 
 					$this->mailClient->markMessageAsRead($message);
 					$this->logger->info('Marked message as read');

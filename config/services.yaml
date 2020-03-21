@@ -16,7 +16,7 @@ services:
             $messageSender: '%env(SLACKER_MESSAGE_SENDER)%'
             $messageSubject: '%env(SLACKER_MESSAGE_SUBJECT)%'
 
-    JanMikes\Slacker\HttpClient:
+    JanMikes\Slacker\Browser\BrowserClient:
         arguments:
             $user: '%env(SLACKER_EXCHANGE_USER)%'
             $password: '%env(SLACKER_EXCHANGE_PASSWORD)%'
@@ -24,4 +24,4 @@ services:
     logger:
         class: 'Symfony\Component\HttpKernel\Log\Logger'
         arguments:
-            $minLevel: 'info'
+            $minLevel: 'debug'
