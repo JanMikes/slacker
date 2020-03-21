@@ -16,7 +16,9 @@ Script is configured via environment variables:
 All these environment variables are **REQUIRED**
 
 ### Manually via PHP
-- `SLACKER_EXCHANGE_EMAIL="john@doe.com" SLACKER_EXCHANGE_USER="john" SLACKER_EXCHANGE_PASSWORD="foobar" SLACKER_MESSAGE_SUBJECT="Activity check" SLACKER_MESSAGE_SENDER="boss@acme.com" php bin/console check-mail`
+```
+SLACKER_EXCHANGE_EMAIL="john@doe.com" SLACKER_EXCHANGE_USER="john" SLACKER_EXCHANGE_PASSWORD="foobar" SLACKER_MESSAGE_SUBJECT="Activity check" SLACKER_MESSAGE_SENDER="boss@acme.com" php bin/console check-mail
+```
 
 If you want to save your credentials, you can create `.env.local` (you can use `.env` file as template), then you can use just `bin/console check-mail`
 
